@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}All Expenses - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-2">
+        <div>
+            <h4 class="page-title mb-1 fw-bold text-dark">All Recorded Expenses</h4>
+            <p class="text-muted small mb-0">Search, filter, and manage your complete transaction history</p>
+        </div>
+        <div>
+            <a href="{% url 'expense_create' %}" class="btn btn-primary rounded-pill shadow-sm px-4">
+                <i class="bi bi-plus-circle me-1"></i> Add New Expense
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form method="get" action="{% url 'expense_list' %}" class="row g-3">
+                <!-- Search Box -->
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label small fw-semibold text-muted">Search Title or Notes</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Search by title, note, or category..." value="{{ search_query }}">
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small fw-semibold text-muted">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for cat_val, cat_label in categories %}
+                        <option value="{{ cat_val }}" {% if selected_category == cat_val %}selected{% endif %}>{{ cat_label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Specific Date -->
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label small fw-semibold text-muted">Specific Date</label>
+                    <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+                </div>
+
+                <!-- Month -->
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label small fw-semibold text-muted">Month</label>
+                    <select name="month" class="form-select">
+                        <option value="">All Months</option>
+                        {% for m_num, m_name in months_range %}
+                        <option value="{{ m_num }}" {% if selected_month == m_num %}selected{% endif %}>{{ m_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Year -->
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label small fw-semibold text-muted">Year</label>
+                    <select name="year" class="form-select">
+                        <option value="">All Years</option>
+                        {% for yr in years_range %}
+                        <option value="{{ yr }}" {% if selected_year == yr %}selected{% endif %}>{{ yr }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                    <a href="{% url 'expense_list' %}" class="btn btn-light px-3">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-funnel me-1"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Overview Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+        <span class="text-muted small">
+            Showing <strong>{{ total_records_count }}</strong> matching record{% if total_records_count != 1 %}s{% endif %}
+        </span>
+        <span class="badge bg-light text-dark border px-3 py-2 fs-6">
+            Filtered Total: <strong class="text-danger ms-1">₹{{ total_filtered_amount|floatformat:2 }}</strong>
+        </span>
+    </div>
+
+    <!-- Expenses Table Card -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            {% if page_obj.object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 custom-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Expense Title</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Payment Method</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in page_obj %}
+                        <tr>
+                            <td class="ps-4 fw-semibold text-dark">
+                                {{ expense.title }}
+                            </td>
+                            <td>
+                                <span class="badge category-badge category-{{ expense.category|slugify }}">
+                                    {{ expense.category }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-danger">₹{{ expense.amount|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted small">
+                                    <i class="bi bi-wallet2 me-1"></i> {{ expense.payment_method }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-secondary small">{{ expense.expense_date|date:"d M Y" }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted small text-truncate d-inline-block" style="max-width: 200px;">
+                                    {{ expense.description|default:"—" }}
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'expense_update' expense.pk %}" class="btn btn-outline-secondary" title="Edit Expense">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'expense_delete' expense.pk %}" class="btn btn-outline-danger" title="Delete Expense">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-transparent border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="text-muted small">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">&laquo; First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Last &raquo;</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty state -->
+            <div class="text-center py-5">
+                <div class="empty-icon text-muted mb-3">
+                    <i class="bi bi-search" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="fw-bold text-dark">No Expenses Found</h5>
+                <p class="text-muted small mb-3">No expenses match your search or filter criteria.</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{% url 'expense_list' %}" class="btn btn-light rounded-pill px-3">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filters
+                    </a>
+                    <a href="{% url 'expense_create' %}" class="btn btn-primary rounded-pill px-3">
+                        <i class="bi bi-plus-circle me-1"></i> Add New Expense
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

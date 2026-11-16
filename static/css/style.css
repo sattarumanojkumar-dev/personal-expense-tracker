@@ -1,0 +1,416 @@
+/* ========================================================
+   Personal Expense Tracker - Modern FinTech UI Stylesheet
+   ======================================================== */
+
+:root {
+    --app-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --sidebar-bg: #0f172a;
+    --sidebar-hover: #1e293b;
+    --sidebar-active: #2563eb;
+    --sidebar-text: #94a3b8;
+    --sidebar-text-hover: #ffffff;
+    
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #06b6d4;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    
+    --border-color: #e2e8f0;
+    --border-radius: 1rem;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+}
+
+body.app-body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--app-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* --------------------------------------------------------
+   App Layout
+   -------------------------------------------------------- */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.app-sidebar {
+    width: 260px;
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-brand {
+    padding: 1.5rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+.brand-title {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.brand-subtitle {
+    display: block;
+    font-size: 0.72rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.92rem;
+    border-radius: 0.65rem;
+    transition: all 0.2s ease;
+}
+
+.nav-link i {
+    font-size: 1.15rem;
+    opacity: 0.8;
+}
+
+.nav-link:hover {
+    background-color: var(--sidebar-hover);
+    color: var(--sidebar-text-hover);
+}
+
+.nav-link.active {
+    background-color: var(--sidebar-active);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.nav-link.active i {
+    opacity: 1;
+}
+
+.sidebar-footer {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    color: #ef4444;
+    background: transparent;
+    border: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    border-radius: 0.65rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+/* --------------------------------------------------------
+   Main Workspace
+   -------------------------------------------------------- */
+.app-main {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Topbar */
+.app-topbar {
+    height: 72px;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.welcome-greeting {
+    display: block;
+    font-size: 1.02rem;
+    color: var(--text-primary);
+}
+
+.welcome-date {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 2rem;
+    background-color: #f1f5f9;
+}
+
+.avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: #ffffff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.user-info {
+    line-height: 1.2;
+}
+
+.user-name {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-phone {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+/* Content */
+.app-content {
+    flex: 1;
+    padding: 2rem;
+}
+
+.app-footer {
+    padding: 1.25rem 2rem;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+}
+
+/* --------------------------------------------------------
+   Dashboard Metric Cards
+   -------------------------------------------------------- */
+.stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md) !important;
+}
+
+.stat-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+}
+
+/* --------------------------------------------------------
+   Category Badges
+   -------------------------------------------------------- */
+.category-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.78rem;
+}
+
+.category-food { background-color: #fef3c7; color: #b45309; }
+.category-transportation { background-color: #e0f2fe; color: #0369a1; }
+.category-shopping { background-color: #fce7f3; color: #be185d; }
+.category-education { background-color: #ede9fe; color: #6d28d9; }
+.category-entertainment { background-color: #f3e8ff; color: #7e22ce; }
+.category-healthcare { background-color: #fee2e2; color: #b91c1c; }
+.category-bills-utilities { background-color: #ffedd5; color: #c2410c; }
+.category-travel { background-color: #ccfbf1; color: #0f766e; }
+.category-other { background-color: #f1f5f9; color: #475569; }
+
+/* --------------------------------------------------------
+   Custom Table Styling
+   -------------------------------------------------------- */
+.custom-table th {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-top: none;
+}
+
+.custom-table td {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.custom-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* --------------------------------------------------------
+   Auth Layout (Login & Register)
+   -------------------------------------------------------- */
+.auth-layout {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top left, #e0e7ff, #f8fafc 40%, #f1f5f9 100%);
+    padding: 2rem 1rem;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 460px;
+}
+
+.auth-card {
+    background-color: var(--card-bg);
+    border-radius: 1.25rem;
+    padding: 2.5rem 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.auth-brand-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 1rem;
+    background: #eff6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.auth-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+    font-size: 0.88rem;
+}
+
+/* --------------------------------------------------------
+   Mobile Responsiveness
+   -------------------------------------------------------- */
+@media (max-width: 991.98px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .app-sidebar.show {
+        transform: translateX(0);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .app-main {
+        margin-left: 0;
+    }
+
+    .app-topbar {
+        padding: 0 1rem;
+    }
+
+    .app-content {
+        padding: 1rem;
+    }
+}

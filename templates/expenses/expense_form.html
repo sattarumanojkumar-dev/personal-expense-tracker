@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Edit Expense - {{ expense.title }}{% else %}Add New Expense{% endif %} - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="page-title mb-1 fw-bold text-dark">
+                {% if is_edit %}
+                <i class="bi bi-pencil-square text-primary me-2"></i> Edit Expense Record
+                {% else %}
+                <i class="bi bi-plus-circle-dotted text-primary me-2"></i> Record New Expense
+                {% endif %}
+            </h4>
+            <p class="text-muted small mb-0">
+                {% if is_edit %}
+                Modify existing transaction details. Values update real-time across reports and dashboard.
+                {% else %}
+                Log your daily transaction details. Automatically stored securely in your SQL database.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to Expenses
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger py-2 small mb-4">
+                            {% for error in form.non_field_errors %}
+                                <div><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-4">
+                            <!-- Expense Title -->
+                            <div class="col-12">
+                                <label for="id_title" class="form-label fw-semibold">
+                                    Expense Title <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-tag text-muted"></i></span>
+                                    {{ form.title }}
+                                </div>
+                                {% if form.title.errors %}
+                                <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Amount (₹) -->
+                            <div class="col-md-6">
+                                <label for="id_amount" class="form-label fw-semibold">
+                                    Amount in Indian Rupees (₹) <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light fw-bold text-dark">₹</span>
+                                    {{ form.amount }}
+                                </div>
+                                <div class="form-text small text-muted">Must be strictly greater than ₹0.00</div>
+                                {% if form.amount.errors %}
+                                <div class="text-danger small mt-1">{{ form.amount.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Category -->
+                            <div class="col-md-6">
+                                <label for="id_category" class="form-label fw-semibold">
+                                    Category <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-grid text-muted"></i></span>
+                                    {{ form.category }}
+                                </div>
+                                {% if form.category.errors %}
+                                <div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Payment Method -->
+                            <div class="col-md-6">
+                                <label for="id_payment_method" class="form-label fw-semibold">
+                                    Payment Method <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-credit-card text-muted"></i></span>
+                                    {{ form.payment_method }}
+                                </div>
+                                {% if form.payment_method.errors %}
+                                <div class="text-danger small mt-1">{{ form.payment_method.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Expense Date -->
+                            <div class="col-md-6">
+                                <label for="id_expense_date" class="form-label fw-semibold">
+                                    Expense Date <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-calendar-event text-muted"></i></span>
+                                    {{ form.expense_date }}
+                                </div>
+                                {% if form.expense_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.expense_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Description (Optional) -->
+                            <div class="col-12">
+                                <label for="id_description" class="form-label fw-semibold">
+                                    Description or Notes <span class="text-muted fw-normal">(Optional)</span>
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="{% url 'expense_list' %}" class="btn btn-light px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                                <i class="bi bi-check-lg me-1"></i>
+                                {% if is_edit %}Update Expense{% else %}Save Expense{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

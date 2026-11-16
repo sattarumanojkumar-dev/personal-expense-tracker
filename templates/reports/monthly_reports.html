@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}Monthly Financial Reports - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-2">
+        <div>
+            <h4 class="page-title mb-1 fw-bold text-dark">Monthly Financial Reports</h4>
+            <p class="text-muted small mb-0">Detailed spending analysis and month-over-month financial trends</p>
+        </div>
+        <div>
+            <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="bi bi-receipt me-1"></i> View All Expenses
+            </a>
+        </div>
+    </div>
+
+    <!-- Month & Year Selector Form -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form method="get" action="{% url 'monthly_reports' %}" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small text-muted">Select Reporting Month</label>
+                    <select name="month" class="form-select">
+                        {% for m_num, m_name in months_range %}
+                        <option value="{{ m_num }}" {% if selected_month == m_num %}selected{% endif %}>{{ m_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small text-muted">Select Reporting Year</label>
+                    <select name="year" class="form-select">
+                        {% for yr in years_range %}
+                        <option value="{{ yr }}" {% if selected_year == yr %}selected{% endif %}>{{ yr }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i> Generate Monthly Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Monthly Summary Metric Cards -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Selected Month Total -->
+        <div class="col-lg-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <span class="text-muted text-uppercase fw-semibold small">
+                        {{ report.month_name }} {{ report.year }} Total
+                    </span>
+                    <h3 class="fw-bold text-dark mt-2 mb-0">₹{{ report.current_month_total|floatformat:2 }}</h3>
+                    <span class="text-muted small">Across {{ report.current_month_count }} transaction{% if report.current_month_count != 1 %}s{% endif %}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Previous Month Total -->
+        <div class="col-lg-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <span class="text-muted text-uppercase fw-semibold small">
+                        {{ report.prev_month_name }} {{ report.prev_year }} Total
+                    </span>
+                    <h3 class="fw-bold text-dark mt-2 mb-0">₹{{ report.prev_month_total|floatformat:2 }}</h3>
+                    <span class="text-muted small">Across {{ report.prev_month_count }} transaction{% if report.prev_month_count != 1 %}s{% endif %}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Monthly Comparison (Diff) -->
+        <div class="col-lg-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <span class="text-muted text-uppercase fw-semibold small">Month-over-Month Net</span>
+                    <h3 class="fw-bold mt-2 mb-0 {% if report.is_increase %}text-danger{% else %}text-success{% endif %}">
+                        {% if report.diff > 0 %}+{% endif %}₹{{ report.diff|floatformat:2 }}
+                    </h3>
+                    <span class="small {% if report.is_increase %}text-danger{% else %}text-success{% endif %} fw-semibold">
+                        {% if report.is_increase %}
+                            <i class="bi bi-arrow-up-right"></i> +{{ report.pct_change }}% vs prev month
+                        {% elif report.diff < 0 %}
+                            <i class="bi bi-arrow-down-right"></i> {{ report.pct_change }}% vs prev month
+                        {% else %}
+                            <i class="bi bi-dash"></i> 0% change vs prev month
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Total Transactions -->
+        <div class="col-lg-3 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <span class="text-muted text-uppercase fw-semibold small">Monthly Activity</span>
+                    <h3 class="fw-bold text-dark mt-2 mb-0">{{ report.current_month_count }}</h3>
+                    <span class="text-muted small">Recorded entries in {{ report.month_name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if report.current_month_total > 0 %}
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Daily Trend Bar Chart -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-calendar3-range text-primary me-2"></i> Daily Spending Distribution
+                    </h5>
+                    <p class="text-muted small mb-0">Day-by-day spending during {{ report.month_name }} {{ report.year }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="chart-container position-relative" style="height: 300px;">
+                        <canvas id="dailySpendingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Doughnut Chart -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-pie-chart-fill text-success me-2"></i> Category Spending Share
+                    </h5>
+                    <p class="text-muted small mb-0">Proportional expenditure by category</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="chart-container position-relative d-flex align-items-center justify-content-center" style="height: 300px;">
+                        <canvas id="reportCategoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown Table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2">
+            <h5 class="fw-bold text-dark mb-1">
+                <i class="bi bi-table text-primary me-2"></i> Category-wise Spending Breakdown
+            </h5>
+            <p class="text-muted small mb-0">Detailed breakdown of totals, transaction counts, and percentages</p>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 custom-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Category</th>
+                            <th>Total Amount</th>
+                            <th>Transactions</th>
+                            <th>Percentage Share</th>
+                            <th class="pe-4" style="width: 250px;">Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in report.category_breakdown %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge category-badge category-{{ cat.category|slugify }} fs-6">
+                                    {{ cat.category }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-danger">₹{{ cat.total|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted small">{{ cat.count }} transactions</span>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-dark">{{ cat.percentage }}%</span>
+                            </td>
+                            <td class="pe-4">
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ cat.percentage }}%;" aria-valuenow="{{ cat.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State for the Selected Month -->
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+        <div class="card-body">
+            <div class="empty-icon text-muted mb-3">
+                <i class="bi bi-calendar-x" style="font-size: 3.5rem;"></i>
+            </div>
+            <h4 class="fw-bold text-dark">No Expenses in {{ report.month_name }} {{ report.year }}</h4>
+            <p class="text-muted mb-4">Total expenses for this month are ₹0.00. No transactions were recorded in this timeframe.</p>
+            <a href="{% url 'expense_create' %}" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-plus-circle me-1"></i> Add an Expense for this Month
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if report.current_month_total > 0 %}
+<script>
+    // Daily Spending Chart
+    const dailyLabels = {{ report.daily_labels|safe }};
+    const dailyAmounts = {{ report.daily_amounts|safe }};
+
+    const ctxDaily = document.getElementById('dailySpendingChart').getContext('2d');
+    new Chart(ctxDaily, {
+        type: 'bar',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: 'Spent (₹)',
+                data: dailyAmounts,
+                backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                borderColor: '#2563eb',
+                borderWidth: 1.5,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' ₹' + Number(ctx.raw).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(val) { return '₹' + val.toLocaleString('en-IN'); }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // Report Category Doughnut Chart
+    const catNames = {{ report.cat_names|safe }};
+    const catTotals = {{ report.cat_totals|safe }};
+    const colorPalette = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 
+        '#8b5cf6', '#06b6d4', '#ec4899', '#6366f1', '#14b8a6'
+    ];
+
+    const ctxRepCat = document.getElementById('reportCategoryChart').getContext('2d');
+    new Chart(ctxRepCat, {
+        type: 'doughnut',
+        data: {
+            labels: catNames,
+            datasets: [{
+                data: catTotals,
+                backgroundColor: colorPalette.slice(0, catNames.length),
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, padding: 10 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const val = ctx.raw;
+                            const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                            return ` ${ctx.label}: ₹${val.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${pct}%)`;
+                        }
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

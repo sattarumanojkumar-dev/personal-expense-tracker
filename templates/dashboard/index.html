@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header Title -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-2">
+        <div>
+            <h4 class="page-title mb-1 fw-bold text-dark">Personal Financial Overview</h4>
+            <p class="text-muted small mb-0">Track and monitor your daily spending patterns and budget distribution</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'expense_create' %}" class="btn btn-primary rounded-3 shadow-sm px-3">
+                <i class="bi bi-plus-circle me-1"></i> Add Expense
+            </a>
+            <a href="{% url 'monthly_reports' %}" class="btn btn-outline-secondary rounded-3 px-3">
+                <i class="bi bi-graph-up me-1"></i> View Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 Summary Metric Cards (Calculated directly from SQL) -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Expenses -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="card stat-card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="stat-label text-muted text-uppercase fw-semibold small">Total Expenses</span>
+                        <h3 class="stat-value fw-bold text-dark mt-2 mb-0">₹{{ summary.total_amount|floatformat:2 }}</h3>
+                        <span class="stat-subtext text-muted small">All-time lifetime spending</span>
+                    </div>
+                    <div class="stat-icon bg-primary-subtle text-primary rounded-4">
+                        <i class="bi bi-currency-rupee"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. This Month's Expenses -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="card stat-card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="stat-label text-muted text-uppercase fw-semibold small">This Month</span>
+                        <h3 class="stat-value fw-bold text-dark mt-2 mb-0">₹{{ summary.month_amount|floatformat:2 }}</h3>
+                        <span class="stat-subtext text-muted small">Current calendar month</span>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success rounded-4">
+                        <i class="bi bi-calendar2-month"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Today's Expenses -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="card stat-card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="stat-label text-muted text-uppercase fw-semibold small">Today's Expenses</span>
+                        <h3 class="stat-value fw-bold text-dark mt-2 mb-0">₹{{ summary.today_amount|floatformat:2 }}</h3>
+                        <span class="stat-subtext text-muted small">Spent so far today</span>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning rounded-4">
+                        <i class="bi bi-sun"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Total Transactions -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="card stat-card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="stat-label text-muted text-uppercase fw-semibold small">Total Transactions</span>
+                        <h3 class="stat-value fw-bold text-dark mt-2 mb-0">{{ summary.total_count }}</h3>
+                        <span class="stat-subtext text-muted small">Total logged records</span>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info rounded-4">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Chart 1: Monthly Expense Analysis (Last 6 Months) -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">
+                            <i class="bi bi-bar-chart-line-fill text-primary me-2"></i> Monthly Expense Analysis
+                        </h5>
+                        <p class="text-muted small mb-0">Comparison of spending over the past 6 months</p>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="chart-container position-relative" style="height: 300px;">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Category-wise Expense Analysis -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">
+                            <i class="bi bi-pie-chart-fill text-success me-2"></i> Category Breakdown
+                        </h5>
+                        <p class="text-muted small mb-0">Distribution of expenditures by category</p>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="chart-container position-relative d-flex align-items-center justify-content-center" style="height: 300px;">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions Section -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-clock-history text-secondary me-2"></i> Recent Transactions
+                </h5>
+                <p class="text-muted small mb-0">Your latest 5 recorded expenses</p>
+            </div>
+            <a href="{% url 'expense_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                View All Expenses <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        <div class="card-body p-0">
+            {% if recent_transactions %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 custom-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Expense Title</th>
+                            <th>Category</th>
+                            <th>Payment Method</th>
+                            <th>Date</th>
+                            <th class="text-end pe-4">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exp in recent_transactions %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-semibold text-dark">{{ exp.title }}</span>
+                                {% if exp.description %}
+                                <div class="text-muted small text-truncate" style="max-width: 280px;">{{ exp.description }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge category-badge category-{{ exp.category|slugify }}">
+                                    {{ exp.category }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-muted small">
+                                    <i class="bi bi-credit-card me-1"></i> {{ exp.payment_method }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-secondary small">{{ exp.expense_date|date:"d M Y" }}</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <span class="fw-bold text-danger">₹{{ exp.amount|floatformat:2 }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <!-- Empty state -->
+            <div class="text-center py-5">
+                <div class="empty-icon text-muted mb-3">
+                    <i class="bi bi-receipt" style="font-size: 3rem;"></i>
+                </div>
+                <h6 class="fw-bold text-dark">No Expenses Recorded Yet</h6>
+                <p class="text-muted small mb-3">Start keeping track of your daily expenses today!</p>
+                <a href="{% url 'expense_create' %}" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-plus-circle me-1"></i> Add First Expense
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize Dashboard Charts with Server Data
+    const trendLabels = {{ trend_labels_json|safe }};
+    const trendValues = {{ trend_values_json|safe }};
+    const categoryLabels = {{ category_labels_json|safe }};
+    const categoryValues = {{ category_values_json|safe }};
+
+    // 1. Monthly Expense Trend Chart (Bar Chart)
+    const ctxTrend = document.getElementById('monthlyTrendChart').getContext('2d');
+    new Chart(ctxTrend, {
+        type: 'bar',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Spending (₹)',
+                data: trendValues,
+                backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                borderColor: '#2563eb',
+                borderWidth: 1.5,
+                borderRadius: 8,
+                hoverBackgroundColor: '#1d4ed8'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ' ₹' + Number(context.raw).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString('en-IN');
+                        }
+                    },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // 2. Category Pie / Doughnut Chart
+    const ctxCat = document.getElementById('categoryPieChart').getContext('2d');
+    const colorPalette = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 
+        '#8b5cf6', '#06b6d4', '#ec4899', '#6366f1', '#14b8a6'
+    ];
+
+    if (categoryLabels.length === 0 || categoryValues.every(v => v === 0)) {
+        // Show empty doughnut placeholder
+        new Chart(ctxCat, {
+            type: 'doughnut',
+            data: {
+                labels: ['No Data'],
+                datasets: [{
+                    data: [1],
+                    backgroundColor: ['#e2e8f0'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: { enabled: false }
+                },
+                cutout: '70%'
+            }
+        });
+    } else {
+        new Chart(ctxCat, {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryValues,
+                    backgroundColor: colorPalette.slice(0, categoryLabels.length),
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 12 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const val = context.raw;
+                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                return ` ${context.label}: ₹${val.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${pct}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+</script>
+{% endblock %}
